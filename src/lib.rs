@@ -26,11 +26,12 @@
 #[macro_export]
 macro_rules! keep {
     ($value:expr) => {
-        let _keeped = $value;
+        #[allow(non_snake_case)]
+        let __keymacro_keep__keeped_value = $value;
     };
 }
 
-/// A RAII implementation of `defer`.
+/// A RAII for deferring.
 ///
 /// # Examples
 ///
@@ -55,7 +56,7 @@ pub struct Defer<F: FnOnce()> {
 }
 
 impl<F: FnOnce()> Defer<F> {
-    /// Creates a new instance of `defer`.
+    /// Creates a new instance.
     pub const fn new(deferred: F) -> Self {
         Self {
             deferred: Option::Some(deferred),
@@ -71,36 +72,7 @@ impl<F: FnOnce()> Drop for Defer<F> {
     }
 }
 
-/// A keyword-like macro to create [`Defer`].
-///
-/// # Examples
-///
-/// ```
-/// use {
-///     keymacro::deferred,
-///     std::cell::Cell,
-/// };
-///
-/// let changed = Cell::new(false);
-///
-/// {
-///     let _defer = deferred! {
-///         Cell::set(&changed, true);
-///     };
-///
-///     assert!(!Cell::get(&changed));
-/// }
-///
-/// assert!(Cell::get(&changed));
-/// ```
-#[macro_export]
-macro_rules! deferred {
-    ($($token:tt)*) => {
-        $crate::Defer::new(|| { $($token)* })
-    };
-}
-
-/// A keyword-like macro to create [`Defer`].
+/// Defers an evaluation.
 ///
 /// # Examples
 ///
@@ -125,7 +97,7 @@ macro_rules! deferred {
 #[macro_export]
 macro_rules! defer {
     ($($token:tt)*) => {
-        $crate::keep!($crate::deferred!($($token)*));
+        $crate::keep!($crate::Defer::new(|| { $($token)* }));
     };
 }
 
